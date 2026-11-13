@@ -265,6 +265,9 @@ elseif(PLATFORM_SWITCH)
             ${BOREALIS_PATH}/lib/extern/switch-libpulsar/src/player
             )
     file(GLOB_RECURSE SWITCH_PLATFORM_SRC "${BOREALIS_PATH}/lib/platforms/switch/*.cpp")
+    if (NOT PLATFORM_SWITCH2)
+        list(REMOVE_ITEM SWITCH_PLATFORM_SRC ${BOREALIS_PATH}/lib/platforms/switch/switch2_vulkan.cpp)
+    endif ()
     list(APPEND BOREALIS_SRC ${SWITCH_PLATFORM_SRC})
     list(APPEND BOREALIS_INCLUDE ${BOREALIS_PATH}/lib/extern/switch-libpulsar/include)
     list(APPEND BRLS_PLATFORM_OPTION $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile> -DHAVE_LIBNX -DSWITCH -D__SWITCH__ -DSTBI_NO_THREAD_LOCALS)
@@ -272,6 +275,12 @@ elseif(PLATFORM_SWITCH)
 
     if (BOREALIS_USE_DEKO3D)
         list(APPEND BRLS_PLATFORM_LIBS deko3d nx m)
+    elseif (PLATFORM_SWITCH2)
+        list(REMOVE_ITEM BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/switch_video.cpp)
+        list(APPEND BOREALIS_SRC ${BOREALIS_PATH}/lib/extern/nanovg-vulkan/src/nanovg_vk.c)
+        list(APPEND BOREALIS_INCLUDE ${BOREALIS_PATH}/lib/extern/nanovg-vulkan/src)
+        list(APPEND BRLS_PLATFORM_OPTION -DVK_USE_PLATFORM_VI_NN)
+        list(APPEND BRLS_PLATFORM_LIBS vulkan nx m)
     elseif (USE_SDL2)
         find_package(SDL2 REQUIRED)
         list(REMOVE_ITEM BOREALIS_SRC ${BOREALIS_PATH}/lib/platforms/switch/switch_video.cpp)
@@ -304,7 +313,7 @@ list(APPEND BOREALIS_SOURCE
         ${BOREALIS_PATH}/lib/extern/libretro-common/encodings
         ${BOREALIS_PATH}/lib/extern/libretro-common/features
         )
-if (PLATFORM_PSV OR PLATFORM_PS4 OR BOREALIS_USE_D3D11 OR BOREALIS_USE_DEKO3D)
+if (PLATFORM_PSV OR PLATFORM_PS4 OR BOREALIS_USE_D3D11 OR BOREALIS_USE_DEKO3D OR BOREALIS_USE_VULKAN)
         list(REMOVE_ITEM BOREALIS_SOURCE ${BOREALIS_PATH}/lib/extern/glad)
 endif ()
 
@@ -331,7 +340,9 @@ endforeach (lib)
 
 # borealis 图形 driver
 set(BOREALIS_DRIVER BOREALIS_USE_OPENGL)
-if (BOREALIS_USE_METAL)
+if (BOREALIS_USE_VULKAN)
+    set(BOREALIS_DRIVER BOREALIS_USE_VULKAN)
+elseif (BOREALIS_USE_METAL)
     set(BOREALIS_DRIVER BOREALIS_USE_METAL)
 elseif (BOREALIS_USE_D3D11)
     set(BOREALIS_DRIVER BOREALIS_USE_D3D11)

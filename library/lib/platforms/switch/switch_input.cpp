@@ -16,6 +16,15 @@
 
 #include <borealis/core/application.hpp>
 #include <borealis/platforms/switch/switch_input.hpp>
+#ifdef __SWITCH2__
+#include <borealis/platforms/switch/switch_touch_coordinates.hpp>
+#endif
+#include <borealis/core/application.hpp>
+
+// Avoid namespace collision
+#define NXEvent ::Event
+
+using namespace std::chrono_literals;
 
 namespace brls
 {
@@ -282,8 +291,15 @@ void SwitchInputManager::updateTouchStates(std::vector<RawTouchState>* states)
             RawTouchState state;
             state.pressed    = true;
             state.fingerId   = hidState.touches[i].finger_id;
+#ifdef __SWITCH2__
+            state.position.x = switchTouchCoordinate(hidState.touches[i].x, 1280.0f,
+                Application::windowWidth, Application::windowScale);
+            state.position.y = switchTouchCoordinate(hidState.touches[i].y, 720.0f,
+                Application::windowHeight, Application::windowScale);
+#else
             state.position.x = hidState.touches[i].x / Application::windowScale;
             state.position.y = hidState.touches[i].y / Application::windowScale;
+#endif
             states->push_back(state);
         }
     }
